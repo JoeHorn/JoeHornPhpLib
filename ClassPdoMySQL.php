@@ -9,6 +9,13 @@
  */
 class ClassPdoMySQL {
 	/*
+	 * Constants for transaction control
+	 */
+	const begin	= 'BEGIN';
+	const commit	= 'COMMIT';
+	const rollback	= 'ROLLBACK';
+
+	/*
 	 * PDO object
 	 *
 	 * @var		object	$PDO
@@ -25,18 +32,22 @@ class ClassPdoMySQL {
 	/*
 	 * Constructor function
 	 *
-	 * @param	string $DB_NAME		Database name
-	 * @param	string $DB_HOST		Database server IP/hostname, default: 'localhost'
-	 * @param	string $DB_USERNAME	Database username, default: 'root'
-	 * @param	string $DB_PASSWORD	Database password, default: ''
-	 * @param	string $Charset	Database connection charset, default: 'UTF8'
+	 * @param	string	$db_name	Database name
+	 * @param	string	$db_host	Database server IP/hostname, default: 'localhost'
+	 * @param	string	$db_username	Database username, default: 'root'
+	 * @param	string	$db_password	Database password, default: ''
+	 * @param	string	$charset	Database connection charset, default: 'UTF8'
+	 * @param	boolean $persist	Create Database persistent connections, default: true
 	 */
-	function __construct ( $DB_NAME, $DB_HOST = 'localhost', $DB_USERNAME = 'root', $DB_PASSWORD = '' , $Charset = 'UTF8') {
+	function __construct ( $db_name, $db_host = 'localhost', $db_username = 'root', $db_password = '', $charset = 'UTF8', $persist = true) {
 		try {
-			$this->PDO = New PDO(
-				"mysql:host=$DB_HOST;dbname=$DB_NAME",
-				$DB_USERNAME, $DB_PASSWORD,
-				array(PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES $Charset")
+			$this->PDO = new PDO(
+				"mysql:host=$db_host;dbname=$db_name",
+				$db_username, $db_password,
+				array(
+					PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES $charset" ,
+					PDO::ATTR_PERSISTENT => $persist
+				)
 			);
 			$this->ErrInfo = $this->PDO->errorInfo();
 		} catch (Exception $e) {
@@ -223,7 +234,7 @@ class ClassPdoMySQL {
 					$result = $this->PDO->commit();
 					break;
 				case 'R':
-				case 'COMMIT':
+				case 'ROLLBACK':
 					$result = $this->PDO->rollBack();
 					break;
 				default:
