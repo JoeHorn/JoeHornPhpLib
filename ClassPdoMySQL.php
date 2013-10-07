@@ -9,18 +9,12 @@
  */
 class ClassPdoMySQL extends PDO {
 	/*
-	 * Constants for transaction control
-	 */
-	const begin	= 'BEGIN';
-	const commit	= 'COMMIT';
-	const rollback	= 'ROLLBACK';
-
-	/*
 	 * Error Information
 	 *
+	 * @access	private
 	 * @var		array	$ErrInfo
 	 */
-	public $ErrInfo = array('','','');
+	private $ErrInfo = array('00000',null,null);
 
 	/*
 	 * Constructor function
@@ -42,12 +36,36 @@ class ClassPdoMySQL extends PDO {
 					PDO::ATTR_PERSISTENT => $persist
 				)
 			);
-			$this->ErrInfo = parent::errorInfo();
 		} catch (Exception $e) {
-			$this->ErrInfo = array('','',$e->getMessage());
+			throw $e;
 		}
 	}
 
+	/*
+	 * Reset error information
+	 *
+	 * @access	private
+	 */
+	private function resetErrInfo() {
+		$this->ErrInfo = array('00000',null,null);
+	}
+	
+	/*
+	 * Retrieve error information
+	 *
+	 * @access	public
+	 * @return	array		An array with error information
+	 */
+	public function errorInfo() {
+		$myErrInfo = $this->ErrInfo;
+		
+		if ( empty($myErrInfo[1]) && empty($myErrInfo[2]) ) {
+			return parent::errorInfo();
+		} else {
+			return $myErrInfo;
+		}
+	}
+	
 	/*
 	 * Execute SQL statement
 	 *
@@ -56,41 +74,21 @@ class ClassPdoMySQL extends PDO {
 	 * @param	array		$bindParams	An array with parameters
 	 * @return	PDOStatement			Executed PDOStatement
 	 */
-	public function exec ( $sql , $bindParams = array() ) {
+	public function execPrepared ( $sql , $bindParams ) {
+		$this->resetErrInfo();
+		
 		try {
-			if ( empty($bindParams) ) {
-				$st = parent::query($sql);
-				if ( !$st ) {
-					$this->ErrInfo = parent::errorInfo();
-				} else {
-					$this->ErrInfo = $st->errorInfo();
-				}
-				return $st;
+			$st = parent::prepare($sql);
+			if ( !$st ) {
+				$this->ErrInfo = parent::errorInfo();
 			} else {
-				$st = parent::prepare($sql);
-				if ( !$st ) {
-					$this->ErrInfo = parent::errorInfo();
-				} else {
-					$st->execute($bindParams);
-					$this->ErrInfo = $st->errorInfo();
-				}
-				return $st;
+				$st->execute($bindParams);
+				$this->ErrInfo = $st->errorInfo();
 			}
+			return $st;
 		} catch (Exception $e) {
-			$this->ErrInfo = array('','',$e->getMessage());
+			throw $e;
 		}
-	}
-
-	/*
-	 * Get last insert ID
-	 *
-	 * @access	public
-	 * @return	string			Last insert ID
-	 */
-	public function getLastInsertId() {
-		$id = parent::lastInsertId();
-		$this->ErrInfo = parent::errorInfo();
-		return $id;
 	}
 
 	/*
@@ -101,6 +99,8 @@ class ClassPdoMySQL extends PDO {
 	 * @return	array			An array contains one data row
 	 */
 	public function getRow ( $sql , $fetch_mode = PDO::FETCH_BOTH ) {
+		$this->resetErrInfo();
+		
 		$st = parent::query($sql);
 		if ( !$st ) {
 			$this->ErrInfo = parent::errorInfo();
@@ -120,6 +120,8 @@ class ClassPdoMySQL extends PDO {
 	 * @return	array			An array contains data rows
 	 */
 	public function getRows ( $sql , $fetch_mode = PDO::FETCH_BOTH ) {
+		$this->resetErrInfo();
+		
 		$st = parent::query($sql);
 		if ( !$st ) {
 			$this->ErrInfo = parent::errorInfo();
@@ -139,54 +141,15 @@ class ClassPdoMySQL extends PDO {
 	 * @return	string			Last insert ID
 	 */
 	public function insert ( $sql ) {
+		$this->resetErrInfo();
+		
 		$st = parent::query($sql);
 		if ( !$st ) {
 			$this->ErrInfo = parent::errorInfo();
 			return '';
 		} else {
-			return self::getLastInsertId();
+			return parent::lastInsertId();
 		}
-	}
-
-	/*
-	 * Quote string function
-	 *
-	 * @access	public
-	 * @param	string $str		String want to be quoted
-	 * @return	string			Quoted string
-	 */
-	public function quote ( $str ) {
-		$quotedStr = parent::quote($str);
-		$this->ErrInfo = parent::errorInfo();
-		return $quotedStr;
-	}
-
-	/*
-	 * Transaction function
-	 *
-	 * @access	public
-	 * @param	string $action		Transaction actions
-	 * @return	boolean			Transaction action results
-	 */
-	public function transaction ( $action ) {
-		$result = null;
-		$upAction = strtoupper($action);
-
-		switch ( $upAction ) {
-			case 'C':
-			case 'COMMIT':
-				$result = parent::commit();
-				break;
-			case 'R':
-			case 'ROLLBACK':
-				$result = parent::rollBack();
-				break;
-			default:
-				$result = parent::beginTransaction();
-				break;
-		}
-		$this->ErrInfo = parent::errorInfo();
-		return $result;
 	}
 
 	/*
@@ -197,6 +160,8 @@ class ClassPdoMySQL extends PDO {
 	 * @return	int			Affected rows. It may be FALSE if error occurred.
 	 */
 	public function update ( $sql ) {
+		$this->resetErrInfo();
+		
 		$affectedRows = parent::exec($sql);
 		$this->ErrInfo = parent::errorInfo();
 		return $affectedRows;
