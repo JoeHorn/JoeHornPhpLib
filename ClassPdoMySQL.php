@@ -49,7 +49,7 @@ class ClassPdoMySQL extends PDO {
 	private function resetErrInfo() {
 		$this->ErrInfo = array('00000',null,null);
 	}
-	
+
 	/*
 	 * Retrieve error information
 	 *
@@ -58,14 +58,14 @@ class ClassPdoMySQL extends PDO {
 	 */
 	public function errorInfo() {
 		$myErrInfo = $this->ErrInfo;
-		
+
 		if ( empty($myErrInfo[1]) && empty($myErrInfo[2]) ) {
 			return parent::errorInfo();
 		} else {
 			return $myErrInfo;
 		}
 	}
-	
+
 	/*
 	 * Execute SQL statement
 	 *
@@ -76,7 +76,7 @@ class ClassPdoMySQL extends PDO {
 	 */
 	public function execPrepared ( $sql , $bindParams ) {
 		$this->resetErrInfo();
-		
+
 		try {
 			$st = parent::prepare($sql);
 			if ( !$st ) {
@@ -100,7 +100,7 @@ class ClassPdoMySQL extends PDO {
 	 */
 	public function getRow ( $sql , $fetch_mode = PDO::FETCH_BOTH ) {
 		$this->resetErrInfo();
-		
+
 		$st = parent::query($sql);
 		if ( !$st ) {
 			$this->ErrInfo = parent::errorInfo();
@@ -121,7 +121,7 @@ class ClassPdoMySQL extends PDO {
 	 */
 	public function getRows ( $sql , $fetch_mode = PDO::FETCH_BOTH ) {
 		$this->resetErrInfo();
-		
+
 		$st = parent::query($sql);
 		if ( !$st ) {
 			$this->ErrInfo = parent::errorInfo();
@@ -142,12 +142,13 @@ class ClassPdoMySQL extends PDO {
 	 */
 	public function insert ( $sql ) {
 		$this->resetErrInfo();
-		
+
 		$st = parent::query($sql);
 		if ( !$st ) {
 			$this->ErrInfo = parent::errorInfo();
 			return '';
 		} else {
+			$this->ErrInfo = $st->errorInfo();
 			return parent::lastInsertId();
 		}
 	}
@@ -157,13 +158,17 @@ class ClassPdoMySQL extends PDO {
 	 *
 	 * @access	public
 	 * @param	string $sql		SQL statement
-	 * @return	int			Affected rows. It may be FALSE if error occurred.
+	 * @return	int			Affected rows count
 	 */
 	public function update ( $sql ) {
 		$this->resetErrInfo();
-		
+
 		$affectedRows = parent::exec($sql);
 		$this->ErrInfo = parent::errorInfo();
+
+		if ( $affectedRows == false ) {
+			$affectedRows = 0;
+		}
 		return $affectedRows;
 	}
 }
