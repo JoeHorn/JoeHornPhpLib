@@ -70,6 +70,23 @@ class ClassPdoMySQL extends PDO {
 	 * Execute SQL statement
 	 *
 	 * @access	public
+	 * @param	array		$vals		An array with values
+	 * @return	array				An array with quoted values
+	 */
+	public function getWhereInClause ( $vals ) {
+		$res = array();
+		if ( is_array($vals) ) {
+			foreach ( $vals as $val ) {
+				array_push( $res , parent::quote($val) );
+			}
+		}
+		return $res;
+	}
+	
+	/*
+	 * Execute SQL statement
+	 *
+	 * @access	public
 	 * @param	string		$sql		SQL statement
 	 * @param	array		$bindParams	An array with parameters
 	 * @return	PDOStatement			Executed PDOStatement
