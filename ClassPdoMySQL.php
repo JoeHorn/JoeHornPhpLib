@@ -66,22 +66,6 @@ class ClassPdoMySQL extends PDO {
 		}
 	}
 
-	/*
-	 * Execute SQL statement
-	 *
-	 * @access	public
-	 * @param	array		$vals		An array with values
-	 * @return	array				An array with quoted values
-	 */
-	public function getWhereInClause ( $vals ) {
-		$res = array();
-		if ( is_array($vals) ) {
-			foreach ( $vals as $val ) {
-				array_push( $res , parent::quote($val) );
-			}
-		}
-		return $res;
-	}
 	
 	/*
 	 * Execute SQL statement
@@ -148,6 +132,23 @@ class ClassPdoMySQL extends PDO {
 			$this->ErrInfo = $st->errorInfo();
 			return $row;
 		}
+	}
+
+	/*
+	 * Get WHERE ... IN ( ... ) clause string
+	 *
+	 * @access	public
+	 * @param	array		$vals		An array with values
+	 * @return	string				A string with quoted values using in WHERE ... IN ( ... )
+	 */
+	public function getWhereInClauseStr ( $vals ) {
+		$tmpArr = array();
+		if ( is_array($vals) ) {
+			foreach ( $vals as $val ) {
+				array_push( $tmpArr , parent::quote($val) );
+			}
+		}
+		return implode(',',$tmpArr);
 	}
 
 	/*
