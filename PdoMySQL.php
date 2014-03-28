@@ -7,7 +7,7 @@
  * @copyright	Copyright (c) 2013, Joe Horn
  * @license	http://www.opensource.org/licenses/bsd-license.php The BSD License
  */
-class ClassPdoMySQL extends PDO {
+class PdoMySQL extends PDO {
 	/*
 	 * Error Information
 	 *
