@@ -20,16 +20,25 @@ class PdoMySQL extends PDO {
 	 * Constructor function
 	 *
 	 * @param	string	$db_name	Database name
-	 * @param	string	$db_host	Database server IP/hostname, default: 'localhost'
 	 * @param	string	$db_username	Database username, default: 'root'
 	 * @param	string	$db_password	Database password, default: ''
 	 * @param	string	$charset	Database connection charset, default: 'UTF8'
+	 * @param	string	$db_host	Database server IP/hostname, default: 'localhost'
+	 * @param	integer	$db_port	Database server port, default: 3306
 	 * @param	boolean $persist	Create Database persistent connections, default: true
 	 */
-	function __construct ( $db_name, $db_host = 'localhost', $db_username = 'root', $db_password = '', $charset = 'UTF8', $persist = true) {
+	function __construct (
+		$db_name,
+		$db_username = 'root',
+		$db_password = '',
+		$charset = 'UTF8',
+		$db_host = 'localhost',
+		$db_port = 3306,
+		$persist = true
+	) {
 		try {
 			parent::__construct(
-				"mysql:host=$db_host;dbname=$db_name",
+				"mysql:host=$db_host;port=$db_port;dbname=$db_name",
 				$db_username, $db_password,
 				array(
 					PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES $charset" ,
