@@ -164,6 +164,26 @@ class PdoMySQL extends PDO {
 	}
 
 	/*
+	 * Extended quote function ( Support array to be put in WHERE ... IN ... clause )
+	 *
+	 * @access	public
+	 * @param	mixed $var		Variable to be quoted
+	 * @return	string			Quoted string
+	 */
+	public function quote ( $var , $parameterType = PDO::PARAM_STR ) {
+		$this->resetErrInfo();
+
+		if ( !is_array($var) ) {
+			return parent::quote($var, $parameterType);
+		} else {
+			foreach ( $var as $k => $v ) {
+				$tmpArr[$k] = parent::quote($v, $parameterType);
+			}
+			return implode(', ', $tmpArr);
+		}
+	}
+
+	/*
 	 * Update function
 	 *
 	 * @access	public
@@ -181,26 +201,5 @@ class PdoMySQL extends PDO {
 		}
 		return $affectedRows;
 	}
-	
-	/*
-	 * Extended quote function ( Support array to be put in WHERE ... IN ... clause )
-	 *
-	 * @access	public
-	 * @param	mixed $var		Variable to be quoted
-	 * @return	string			Quoted 
-	 */
-	public function quote ( $var , $parameterType = PDO::PARAM_STR ) {
-		$this->resetErrInfo();
-
-		if ( !is_array($var) ) {
-			return parent::quote($var, $parameterType);
-		} else {
-			foreach ( $var as $k => $v ) {
-				$tmpArr[$k] = parent::quote($v, $parameterType);
-			}
-			return implode(', ', $tmpArr);
-		}
-	}
-
 }
 ?>
