@@ -4,7 +4,7 @@
  *
  * @author	Joe Horn <joehorn@gmail.com>
  * @category	Class
- * @copyright	Copyright (c) 2013, Joe Horn
+ * @copyright	Copyright (c) 2013-2015, Joe Horn
  * @license	http://www.opensource.org/licenses/bsd-license.php The BSD License
  */
 class PdoMySQL extends PDO {
@@ -108,7 +108,7 @@ class PdoMySQL extends PDO {
 	 * @param	string $sql		SQL statement
 	 * @return	array			An array contains one data row
 	 */
-	public function getRow ( $sql , $fetch_mode = PDO::FETCH_BOTH ) {
+	public function getRow ( $sql , $fetchMode = PDO::FETCH_BOTH ) {
 		$this->resetErrInfo();
 
 		$st = parent::query($sql);
@@ -116,7 +116,7 @@ class PdoMySQL extends PDO {
 			$this->ErrInfo = parent::errorInfo();
 			return array();
 		} else {
-			$row = $st->fetch($fetch_mode);
+			$row = $st->fetch($fetchMode);
 			$this->ErrInfo = $st->errorInfo();
 			return $row;
 		}
@@ -129,7 +129,7 @@ class PdoMySQL extends PDO {
 	 * @param	string $sql		SQL statement
 	 * @return	array			An array contains data rows
 	 */
-	public function getRows ( $sql , $fetch_mode = PDO::FETCH_BOTH ) {
+	public function getRows ( $sql , $fetchMode = PDO::FETCH_BOTH ) {
 		$this->resetErrInfo();
 
 		$st = parent::query($sql);
@@ -137,27 +137,10 @@ class PdoMySQL extends PDO {
 			$this->ErrInfo = parent::errorInfo();
 			return array();
 		} else {
-			$row = $st->fetchAll($fetch_mode);
+			$row = $st->fetchAll($fetchMode);
 			$this->ErrInfo = $st->errorInfo();
 			return $row;
 		}
-	}
-
-	/*
-	 * Get WHERE ... IN ( ... ) clause string
-	 *
-	 * @access	public
-	 * @param	array		$vals		An array with values
-	 * @return	string				A string with quoted values using in WHERE ... IN ( ... )
-	 */
-	public function getWhereInClauseStr ( $vals ) {
-		$tmpArr = array();
-		if ( is_array($vals) ) {
-			foreach ( $vals as $val ) {
-				array_push( $tmpArr , parent::quote($val) );
-			}
-		}
-		return implode(',',$tmpArr);
 	}
 
 	/*
@@ -198,5 +181,26 @@ class PdoMySQL extends PDO {
 		}
 		return $affectedRows;
 	}
+	
+	/*
+	 * Extended quote function ( Support array to be put in WHERE ... IN ... clause )
+	 *
+	 * @access	public
+	 * @param	mixed $var		Variable to be quoted
+	 * @return	string			Quoted 
+	 */
+	public function quote ( $var , $parameterType = PDO::PARAM_STR ) {
+		$this->resetErrInfo();
+
+		if ( !is_array($var) ) {
+			return parent::quote($var, $parameterType);
+		} else {
+			foreach ( $var as $k => $v ) {
+				$tmpArr[$k] = parent::quote($v, $parameterType);
+			}
+			return implode(', ', $tmpArr);
+		}
+	}
+
 }
 ?>
