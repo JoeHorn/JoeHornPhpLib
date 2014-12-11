@@ -60,6 +60,25 @@ class PdoMySQL extends PDO {
 	}
 
 	/*
+	 * Delete function
+	 *
+	 * @access	public
+	 * @param	string $sql		SQL statement
+	 * @return	int			Deleted rows count, -1 while error occurs
+	 */
+	public function delete ( $sql ) {
+		$this->resetErrInfo();
+
+		$affectedRows = parent::exec($sql);
+		$this->ErrInfo = parent::errorInfo();
+
+		if ( $affectedRows == false ) {
+			$affectedRows = -1;
+		}
+		return $affectedRows;
+	}
+
+	/*
 	 * Retrieve error information
 	 *
 	 * @access	public
@@ -75,7 +94,6 @@ class PdoMySQL extends PDO {
 		}
 	}
 
-	
 	/*
 	 * Execute SQL statement
 	 *
@@ -188,18 +206,12 @@ class PdoMySQL extends PDO {
 	 *
 	 * @access	public
 	 * @param	string $sql		SQL statement
-	 * @return	int			Affected rows count
+	 * @return	int			Affected rows count, -1 while error occurs
 	 */
 	public function update ( $sql ) {
 		$this->resetErrInfo();
 
-		$affectedRows = parent::exec($sql);
-		$this->ErrInfo = parent::errorInfo();
-
-		if ( $affectedRows == false ) {
-			$affectedRows = 0;
-		}
-		return $affectedRows;
+		return $this->delete($sql);
 	}
 }
 ?>
