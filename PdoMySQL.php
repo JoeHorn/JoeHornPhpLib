@@ -214,4 +214,3 @@ class PdoMySQL extends PDO {
 		return $this->delete($sql);
 	}
 }
-?>
