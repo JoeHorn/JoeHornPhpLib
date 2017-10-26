@@ -9,8 +9,9 @@
  *  - Supports lazy connection ( Do real connect before executing MySQL command )
  *  - Re-connect & re-try MySQL command if gotten unknown error or "MySQL server has gone away"
  *
- * Recent modified: 2017-10-26
  * PHP version tested : 5.1 ~ 7.1
+ *
+ * Recent modified: 2017-10-26
  *
  * @author      Joe Horn <joehorn@gmail.com>
  * @category    Class
@@ -97,11 +98,10 @@ if ( !class_exists('PdoMySQL') ) {
 
                 return $result;
             } else {
-                error_log('[ERROR] ' . __CLASS__ . ' :' . " method ( $method ) not found!");
+                error_log('[HERMES_LIBRARY_ERROR] ' . __CLASS__ . ' :' . " method ( $method ) not found!");
                 return null;
             }
         }
-
 
         /*
          * Connect to MySQL ( for lazy connect )
@@ -159,7 +159,6 @@ if ( !class_exists('PdoMySQL') ) {
                 return $myErrInfo;
             }
         }
-
 
         /*
          * Execute SQL statement
@@ -239,6 +238,7 @@ if ( !class_exists('PdoMySQL') ) {
                 $this->_errInfo = $this->_conn->errorInfo();
                 return '';
             } else {
+                // No need to reconnect , not using __call()
                 return $this->_conn->lastInsertId();
             }
         }
@@ -259,6 +259,7 @@ if ( !class_exists('PdoMySQL') ) {
             if ( !is_array($var) ) {
                 return $this->_conn->quote($var, $parameterType);
             } else {
+                $tmpArr = array();
                 foreach ( $var as $k => $v ) {
                     $tmpArr[$k] = $this->_conn->quote($v, $parameterType);
                 }
