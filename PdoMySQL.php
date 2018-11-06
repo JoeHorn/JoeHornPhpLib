@@ -74,6 +74,10 @@ if ( !class_exists('PdoMySQL') ) {
          * Magic method for calling PDO methods
          */
         public function __call ( $method , $params ) {
+            if ( !is_array($params) ) {
+                $params = array($params);
+            }
+
             if ( $this->_lazy ) {
                 $this->connect();
             }
@@ -98,7 +102,7 @@ if ( !class_exists('PdoMySQL') ) {
 
                 return $result;
             } else {
-                error_log('[ERROR] ' . __CLASS__ . ' :' . " method ( $method ) not found!");
+                error_log('[HERMES_LIBRARY_ERROR] ' . __CLASS__ . ' :' . " method ( $method ) not found!");
                 return null;
             }
         }
@@ -195,7 +199,7 @@ if ( !class_exists('PdoMySQL') ) {
                 $row = array();
             } else {
                 $row = $st->fetch($fetchMode);
-                if ( $row === false ) {
+                if ( false === $row ) {
                     $row = array();
                     $this->_errInfo = $st->errorInfo();
                 }
