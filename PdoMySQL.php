@@ -102,7 +102,7 @@ if ( !class_exists('PdoMySQL') ) {
 
                 return $result;
             } else {
-                error_log('[HERMES_LIBRARY_ERROR] ' . __CLASS__ . ' :' . " method ( $method ) not found!");
+                error_log('[ERROR] ' . __CLASS__ . ' :' . " method ( $method ) not found!");
                 return null;
             }
         }
