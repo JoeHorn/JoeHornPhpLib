@@ -9,13 +9,13 @@
  *  - Supports lazy connection ( Do real connect before executing MySQL command )
  *  - Re-connect & re-try MySQL command if gotten unknown error or "MySQL server has gone away"
  *
- * PHP version tested : 5.1 ~ 7.1
+ * PHP version tested : 5.1 ~ 7.2
  *
- * Recent modified: 2017-10-26
+ * Recent modified: 2019-01-08
  *
  * @author      Joe Horn <joehorn@gmail.com>
  * @category    Class
- * @copyright   Copyright (c) 2013-2017, Joe Horn
+ * @copyright   Copyright (c) 2013-2019, Joe Horn
  * @license     http://www.opensource.org/licenses/bsd-license.php The BSD License
  */
 if ( !class_exists('PdoMySQL') ) {
@@ -71,7 +71,8 @@ if ( !class_exists('PdoMySQL') ) {
         }
 
         /*
-         * Magic method for calling PDO methods
+         * Magic method for calling PDO methods .
+         * This will do re-connect if unknown error or "MySQL server has gone away" happened
          */
         public function __call ( $method , $params ) {
             if ( !is_array($params) ) {
@@ -102,7 +103,7 @@ if ( !class_exists('PdoMySQL') ) {
 
                 return $result;
             } else {
-                error_log('[ERROR] ' . __CLASS__ . ' :' . " method ( $method ) not found!");
+                error_log('[HERMES_LIBRARY_ERROR] ' . __CLASS__ . ' :' . " method ( $method ) not found!");
                 return null;
             }
         }
@@ -111,18 +112,19 @@ if ( !class_exists('PdoMySQL') ) {
          * Connect to MySQL ( for lazy connect )
          *
          * @access  private
+         * @param   boolean $reConnect  Force to re-connect (even if connection has been established)
          */
         private function connect ( $reConnect = false ) {
             $this->_errInfo = array('00000',null,null);
 
             if ( null == $this->_conn || $reConnect ) {
                 try {
-                    $this->_conn = new PDO(
+                    $this->_conn = @new PDO(
                         "mysql:host={$this->_dbHost};port={$this->_dbPort};dbname={$this->_dbName}",
                         $this->_dbUsername, $this->_dbPassword,
                         array(
                             PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES {$this->_charset}" ,
-                            PDO::ATTR_PERSISTENT => $this->_persistent
+                            PDO::ATTR_PERSISTENT => $this->_persistent ,
                         )
                     );
                 } catch (Exception $e) {
@@ -189,8 +191,9 @@ if ( !class_exists('PdoMySQL') ) {
          * Get single row
          *
          * @access  public
-         * @param   string  $sql    SQL statement
-         * @return  array           An array contains one data row
+         * @param   string  $sql        SQL statement
+         * @param   string  $fetchMode  Data rows fetch mode
+         * @return  array               An array contains one data row
          */
         public function getRow ( $sql , $fetchMode = PDO::FETCH_BOTH ) {
             $st = $this->__call('query', $sql);
@@ -211,8 +214,9 @@ if ( !class_exists('PdoMySQL') ) {
          * Get multi rows
          *
          * @access  public
-         * @param   string  $sql    SQL statement
-         * @return  array           An array contains data rows
+         * @param   string  $sql        SQL statement
+         * @param   string  $fetchMode  Data rows fetch mode
+         * @return  array               An array contains data rows
          */
         public function getRows ( $sql , $fetchMode = PDO::FETCH_BOTH ) {
             $st = $this->__call('query', $sql);
@@ -251,8 +255,9 @@ if ( !class_exists('PdoMySQL') ) {
          * Extended quote function ( Support array to be put in WHERE ... IN ... clause )
          *
          * @access  public
-         * @param   mixed   $var    Variable to be quoted
-         * @return  string          Quoted string
+         * @param   mixed   $var            Variable to be quoted
+           @param   mixed   $parameterType  Quoted variable type
+         * @return  string                  Quoted string
          */
         public function quote ( $var , $parameterType = PDO::PARAM_STR ) {
             if ( $this->_lazy ) {
