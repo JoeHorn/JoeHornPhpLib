@@ -75,6 +75,8 @@ if ( !class_exists('PdoMySQL') ) {
          * This will do re-connect if unknown error or "MySQL server has gone away" happened
          */
         public function __call ( $method , $params ) {
+            $this->_errInfo = array('00000',null,null);
+
             if ( !is_array($params) ) {
                 $params = array($params);
             }
@@ -98,6 +100,7 @@ if ( !class_exists('PdoMySQL') ) {
                         array($this->_conn, $method),
                         $params
                     );
+                    $this->_errInfo = $this->_conn->errorInfo();
                     $retry++;
                 }
 
@@ -141,6 +144,8 @@ if ( !class_exists('PdoMySQL') ) {
          * @return  int             Deleted rows count, -1 while error occurs
          */
         public function delete ( $sql ) {
+            $this->_errInfo = array('00000',null,null);
+
             $affectedRows = $this->__call('exec', $sql);
 
             if ( $affectedRows === false ) {
@@ -175,6 +180,8 @@ if ( !class_exists('PdoMySQL') ) {
          * @return  PDOStatement                Executed PDOStatement
          */
         public function execPrepared ( $sql , $bindParams ) {
+            $this->_errInfo = array('00000',null,null);
+
             $st = $this->__call('prepare', $sql);
             if ( !$st ) {
                 $this->_errInfo = $this->_conn->errorInfo();
@@ -196,6 +203,8 @@ if ( !class_exists('PdoMySQL') ) {
          * @return  array               An array contains one data row
          */
         public function getRow ( $sql , $fetchMode = PDO::FETCH_BOTH ) {
+            $this->_errInfo = array('00000',null,null);
+
             $st = $this->__call('query', $sql);
             if ( !$st ) {
                 $this->_errInfo = $this->_conn->errorInfo();
@@ -219,6 +228,8 @@ if ( !class_exists('PdoMySQL') ) {
          * @return  array               An array contains data rows
          */
         public function getRows ( $sql , $fetchMode = PDO::FETCH_BOTH ) {
+            $this->_errInfo = array('00000',null,null);
+
             $st = $this->__call('query', $sql);
             if ( !$st ) {
                 $this->_errInfo = $this->_conn->errorInfo();
@@ -241,6 +252,8 @@ if ( !class_exists('PdoMySQL') ) {
          * @return  string          Last insert ID
          */
         public function insert ( $sql ) {
+            $this->_errInfo = array('00000',null,null);
+
             $st = $this->__call('query', $sql);
             if ( !$st ) {
                 $this->_errInfo = $this->_conn->errorInfo();
@@ -260,17 +273,20 @@ if ( !class_exists('PdoMySQL') ) {
          * @return  string                  Quoted string
          */
         public function quote ( $var , $parameterType = PDO::PARAM_STR ) {
+            $this->_errInfo = array('00000',null,null);
+
+            // Need $this->_conn ( PDO object )
             if ( $this->_lazy ) {
                 $this->connect();
             }
 
             // PDO->quote() no need to reconnect , not using __call()
             if ( !is_array($var) ) {
-                return $this->_conn->quote($var, $parameterType);
+                return is_null($var) ? 'NULL' : $this->_conn->quote($var, $parameterType);
             } else {
                 $tmpArr = array();
                 foreach ( $var as $k => $v ) {
-                    $tmpArr[$k] = $this->_conn->quote($v, $parameterType);
+                    $tmpArr[$k] = is_null($var) ? 'NULL' : $this->_conn->quote($v, $parameterType);
                 }
                 return implode(', ', $tmpArr);
             }
